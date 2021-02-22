@@ -72,3 +72,8 @@ question2_plot <- ggplot(data = remove_missing(merged_bis, vars = c("affin"))) +
 dev.off()
 
 print(count(merged_bis, bing, period, sort = TRUE))
+
+# A csv document in tidy format of sentiment results for the two articles, which
+#could be expanded to include more than these two quarterly reports.
+
+write.csv(merged_bis,'sentiment_bis.csv')
