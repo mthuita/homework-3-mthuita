@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1614001781295.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1859992555",
+    "id" : "42B4FEB0",
+    "lastKnownWriteTime" : 1614001485,
+    "last_content_update" : 1614001485,
+    "path" : "~/Documents/Graduate School/Winter 2021/Data and Programming II/Lecture 8/nlp.R",
+    "project_path" : null,
+    "properties" : {
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,97 @@
+# install.packages("tidytext")
+# install.packages("textdata")
+library(tidyverse)
+library(tidytext)
+
+s19 <- read_file("C:\\Users\\Jeff Levy\\Documents\\lecture 8 data\\beigebook 2019-09.txt")
+
+text_df <- tibble(text = s19)
+word_tokens_df <-     unnest_tokens(text_df, word_tokens,  text, token = "words")
+sentence_tokens_df <- unnest_tokens(text_df, sent_tokens,  text, token = "sentences")
+ngram_tokens_df <-    unnest_tokens(text_df, ngram_tokens, text, token = "ngrams", n = 3)
+
+count(word_tokens_df, word_tokens, sort = TRUE)
+
+no_sw_df19 <- anti_join(word_tokens_df, stop_words, by = c("word_tokens" = "word"))
+count(no_sw_df19, word_tokens, sort = TRUE)
+
+sentiment_nrc <-   get_sentiments("nrc")   #manually created via crowdsourcing, ten categories, not unique!
+sentiment_afinn <- get_sentiments("afinn") #product of one researcher, pos/neg integer values
+sentiment_bing <-  get_sentiments("bing")  #built on online reviews, pos/neg only
+
+for (s in c("nrc", "afinn", "bing")) {
+  no_sw_df19 <- no_sw_df19 %>%
+    left_join(get_sentiments(s), by = c("word_tokens" = "word")) %>%
+    plyr::rename(replace = c(sentiment = s, value = s), warn_missing = FALSE)
+}
+ 
+ggplot(data = filter(no_sw_df19, !is.na(nrc))) +
+  geom_histogram(aes(nrc), stat = "count") +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(title = "Federal Reserve Sentiment (NRC): Sep 2019")
+
+ggplot(data = filter(no_sw_df19, !is.na(bing))) +
+  geom_histogram(aes(bing), stat = "count") +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(title = "Federal Reserve Sentiment (BING): Sep 2019")
+
+ggplot(data = filter(no_sw_df19, !is.na(afinn))) +
+  geom_histogram(aes(afinn), stat = "count") +
+  scale_x_continuous(n.breaks = 7) +
+  labs(title = "Federal Reserve Sentiment (AFINN): Sep 2019")
+
+count(no_sw_df19, nrc, sort = TRUE)
+
+
+#change data
+
+s20 <- read_file("C:\\Users\\Jeff Levy\\Documents\\lecture 8 data\\beigebook 2020-04.txt")
+text_df <- tibble(text = s20)
+word_tokens_df <- unnest_tokens(text_df, word_tokens, text, token = "words")
+no_sw_df20 <- anti_join(word_tokens_df, stop_words, by = c("word_tokens" = "word"))
+
+for (s in c("nrc", "afinn", "bing")) {
+  no_sw_df20 <- no_sw_df20 %>%
+    left_join(get_sentiments(s), by = c("word_tokens" = "word")) %>%
+    plyr::rename(replace = c(sentiment = s, value = s), warn_missing = FALSE)
+}
+
+ggplot(data = filter(no_sw_df20, !is.na(bing))) +
+  geom_histogram(aes(bing), stat = "count") +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(title = "Federal Reserve Sentiment (BING): April 2020")
+
+count(no_sw_df20, nrc, sort = TRUE)
+
+#working with negation
+bigrams20 <- unnest_tokens(text_df, bigrams, text, token = "ngrams", n = 2) #each row is now a bigram (tidy)
+bigrams_sep <- separate(bigrams20, bigrams, c("word1", "word2"), sep = " ")
+
+#remove stopwords
+bigrams_filter <- bigrams_sep %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+count(bigrams_filter, word1, word2, sort = TRUE)
+bigrams_unite <- unite(bigrams_filter, bigram, word1, word2, sep = " ")
+
+#investigate nots
+bigrams_sep %>%
+  filter(word1 == "not") %>%
+  count(word1, word2, sort = TRUE)
+
+not_words <- bigrams_sep %>%
+  filter(word1 == "not") %>%
+  inner_join(sentiment_bing, by = c(word2 = "word")) %>%
+  count(word2, sentiment, sort = TRUE)
+
+#bring all together
+no_sw_df19$period <- "pre-covid"
+no_sw_df20$period <- "covid"
+merged <- rbind(no_sw_df19, no_sw_df20)
+
+count(merged, bing, period, sort = TRUE)
+
+ggplot(data = remove_missing(merged, vars = c("afinn"))) +
+  geom_histogram(aes(afinn, fill = period), position = "dodge", stat = "count") +
+  scale_x_continuous(n.breaks = 7)
