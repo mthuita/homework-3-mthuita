@@ -58,3 +58,8 @@ question1_plot <- grid.arrange(plot_nrc, plot_afinn, ncol = 2,
              nrow = 1) 
 
 dev.off()
+
+# A csv document in tidy format of sentiment results for the two articles, which
+#could be expanded to include more than these two quarterly reports.
+
+write.csv(merged_bis,'sentiment_bis.csv')
